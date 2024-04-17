@@ -1,0 +1,157 @@
+Sub autoExportRecord()
+
+    
+    Dim ref As String, i As Integer, invoice As String, finding As Range, too As String, number As Integer
+    'Dim msgback As String
+    Dim price As Single
+    
+    
+    Windows("exportExportRecords.xlsm").Activate
+
+
+    For i = 2 To ActiveSheet.UsedRange.Rows.Count
+    
+        
+        
+        ref = Range("c" & i)
+        invoice = Range("d" & i)
+        price = Range("g" & i)
+        number = Range("e" & i)
+        
+        
+        If InStr(Range("f" & i).Value, "-") Then
+        
+            too = Range("f" & i)
+            
+        ElseIf InStr(Range("f" & i).Value, "+") Then
+        
+            too = Range("f" & i) & Range("e" & i)
+            'newly added for 退貨
+            number = number * -1
+        
+        Else
+        
+            too = Range("f" & i) & " -" & Range("e" & i)
+        
+        End If
+        
+
+        
+    
+    'first check active
+        
+        Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\CHARMSMART " & getYear() & " 出入貨紀錄.xlsx"
+    
+        Windows("CHARMSMART " & getYear() & " 出入貨紀錄.xlsx").Activate
+        Worksheets("active").Activate
+        
+        
+        Set finding = Range("b:b").Find(invoice)
+        
+        If finding Is Nothing Then
+            
+            'MsgBox invoice & " not found in CS 2023, proceeding to find in CS 2022"
+            
+            'check 2022 if not in 2023
+            'update old stock at same workbook as 舊貨庫存
+            
+            'Windows("CHARMSMART 2022 財政年度 出·入貨表ver2.xlsx").Activate
+            Worksheets("舊貨庫存").Activate
+            
+            Set finding = Range("b:b").Find(invoice)
+            
+            If finding Is Nothing Then
+            
+                MsgBox "invoice: " & invoice & "was not found"
+                
+            Else
+        
+                msgback = msgback + insertCases(invoice, too, ref, price)
+                
+                'edit the current number
+                If Selection.Column = 5 Then
+                
+                    Range("l" & Selection.End(xlUp).Row) = Range("l" & Selection.End(xlUp).Row) - number
+                
+                ElseIf Selection.Column = 4 Then
+                    
+                    Range("l" & Selection.Row) = Range("l" & Selection.Row) - number
+                
+                End If
+                
+            End If
+            
+        Else
+        
+            msgback = msgback + insertCases(invoice, too, ref, price)
+            
+        End If
+        
+        
+        Windows("exportExportRecords.xlsm").Activate
+        
+    Next i
+
+    MsgBox "inserted at " & msgback
+
+End Sub
+
+
+Function insertCases(invoice As String, too As String, ref As String, price As Single) As String
+
+    Set finding = Range("b:b").Find(invoice)
+
+    finding.Select
+                
+    Set finding = Range("d:d").Find(ref, after:=Range("d" & finding.Row - 1))
+    
+    finding.Select
+    
+    Application.CutCopyMode = False
+    
+    If Range("j" & finding.Row).Value = "" Then
+        
+        Range("j" & finding.Row).Value = too
+        Range("m" & finding.Row).Value = price
+        
+    'changed from h, i, i to d, e, e################################
+    ElseIf Range("d" & finding.Row + 1).Value = "" And Range("e" & finding.Row + 1).Value = "" Then
+    
+        Range("e" & finding.Row).End(xlDown).Select
+        
+        Rows(Selection.Row).Insert
+        
+        Range("j" & Selection.Row).Value = too
+        Range("m" & Selection.Row).Value = price
+    
+    Else
+    
+        Rows(finding.Row + 1).Insert
+        Range("j" & finding.Row + 1).Value = too
+        Range("m" & finding.Row + 1).Value = price
+                    
+    End If
+    
+    Application.CutCopyMode = True
+    
+    insertCases = finding.Address(False, False)
+
+End Function
+
+Function getYear() As String
+
+       
+    filePath = "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\DATABASE_TRIAL\python files\year.txt"
+    
+    file = FreeFile
+    
+    Open filePath For Input As FreeFile
+    
+    strFileText = Input(LOF(file), file)
+    
+    Close file
+    
+    getYear = strFileText
+    
+    
+End Function
