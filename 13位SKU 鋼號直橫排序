@@ -1,0 +1,55 @@
+Sub skuVersion()
+
+    Worksheets("工作表1").Activate
+
+    Dim regexPattern1 As Object
+    Set regexPattern1 = New RegExp
+    
+    Dim regexPattern2 As Object
+    Set regexPattern2 = New RegExp
+    
+    Dim regexPattern3 As Object
+    Set regexPattern3 = New RegExp
+    
+    regexPattern1.Pattern = "\."
+    regexPattern2.Pattern = "H\d{8}"
+    regexPattern3.Pattern = "\d{13}"
+
+    For i = 1 To ActiveSheet.UsedRange.Rows.Count
+    
+    
+        '
+        If regexPattern3.test(Range("a" & i).Value) = False Then
+        
+            Range("a" & i).End(xlUp).Select
+            If Range("b" & Selection.row).Value <> "" Then
+            
+                Range("a" & i).Cut Cells(Selection.row, Selection.End(xlToRight).Column + 1)
+                
+            Else
+            
+                Range("a" & i).Cut Range("b" & Selection.row)
+            
+            End If
+            
+        End If
+
+    Next i
+    
+    maxRow = ActiveSheet.UsedRange.Rows.Count
+    
+    For i = 1 To maxRow
+    
+        row = maxRow + 1 - i
+    
+        If Range("a" & maxRow + 1 - i).Value = "" Then
+        
+            Rows(maxRow + 1 - i).Delete
+        
+        End If
+    
+    Next i
+    
+    
+
+End Sub
