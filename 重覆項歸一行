@@ -1,0 +1,83 @@
+Sub addLateralItemsTorepeated()
+
+Dim reArray() As String
+
+    For Each cell In Range("b:b")
+    
+        If cell.Value <> "" Then
+        
+            Set nextCell = Range("b:b").Find(cell.Value, after:=cell)
+            
+            nextAddress = nextCell.Address(False, False)
+            
+            Debug.Print cell.Value
+            
+            If nextAddress <> cell.Address(False, False) Then
+            
+                Do While nextAddress <> cell.Address(False, False)
+                
+                    Debug.Print nextAddress
+                    
+                    'below are raw logics.....
+                    
+                    'Range("c" & nextCell.Row & ":" & Range("b" & nextCell.Row).End(xlToRight).Column & nextCell.Row).Copy range(cell.End(xlToRight).Offset(0, 1).column & cell.row & ":" &
+                    'copy into array and paste by order
+                    ReDim reArray(counter(nextCell.row) - 3)
+                    
+                    For i = 3 To counter(nextCell.row)
+                    
+                        reArray(i - 3) = Cells(nextCell.row, i)
+                    
+                    Next i
+                    
+                    'paste
+                    For i = 0 To UBound(reArray)
+                    
+                        Cells(cell.row, cell.End(xlToRight).Offset(0, 1).Column).Value = reArray(i)
+                    
+                    Next i
+                    
+                    
+                    Range(nextCell.row & ":" & nextCell.row).Delete
+                    
+                    '==============================
+                    
+                    Set nextCell = Range("b:b").Find(cell.Value, after:=Range("" & nextAddress))
+                    nextAddress = nextCell.Address(False, False)
+                    
+                    
+                    
+                
+                Loop
+            
+            End If
+        
+        End If
+    
+    Next cell
+
+End Sub
+
+'==============================================================================
+
+Function counter(row As Integer) As Integer
+
+    Count = 0
+
+    For Each cell In Range("" & row & ":" & row)
+    
+        If cell.Value <> "" Then
+        
+            Count = Count + 1
+            
+        Else
+        
+            counter = Count
+        
+        End If
+    
+    Next cell
+    
+    counter = Count
+
+End Function
