@@ -1,0 +1,523 @@
+'
+'
+'
+
+
+Sub make報關()
+
+    Dim chose As Integer
+
+    chose = InputBox("請輸入 1 (鄭州), 2 (黃埔) 或 3 (天津)")
+    
+    Dim numOfItem As Integer, i As Integer, reFileName As String
+    Dim sku() As String, num() As Integer, ref() As String, bip() As String, price() As Double, title() As String
+    
+    
+    Dim upc() As String
+    Dim contractNo As String
+    Dim currentRATE As Double
+    
+    If chose = 1 Then
+        
+        Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\sample.xlsx"
+        
+        
+        Windows("報關資料處理檔.xlsm").Activate
+        
+    
+        numOfItem = checkRow() - 1
+        
+        ReDim sku(numOfItem)
+        ReDim num(numOfItem)
+        ReDim ref(numOfItem)
+        ReDim bip(numOfItem)
+        ReDim price(numOfItem)
+        
+        'Save data into arrays
+        For i = 2 To numOfItem + 1
+        
+            sku(i - 2) = Range("a" & i).Value
+            num(i - 2) = Range("d" & i).Value
+            ref(i - 2) = Range("b" & i).Value
+            bip(i - 2) = Range("g" & i).Value
+            price(i - 2) = WorksheetFunction.Round(Range("k" & i).Value, 2)
+            
+            'Debug.Print sku(i - 2), num(i - 2), ref(i - 2), bip(i - 2), price(i - 2)
+        
+        Next i
+        
+        uniqueBIP = ArrayRemoveDups(bip)
+        reFileName = "鄭州單据" & uniqueBIP(0)
+        invoiceNo = uniqueBIP(0)
+        
+        For i = 1 To UBound(uniqueBIP) - 1
+        
+            reFileName = reFileName & "-" & uniqueBIP(i)
+            invoiceNo = invoiceNo & "/" & uniqueBIP(i)
+        
+        Next i
+        
+        Windows("sample.xlsx").Activate
+        
+        
+        ActiveWorkbook.SaveAs Filename:="C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\報關做單\" & reFileName & ".xlsx"
+        
+        ActiveWorkbook.Worksheets(3).Activate
+        
+        Range("g1").Value = invoiceNo
+        Range("g2").Value = Format(Date, "mm/dd/yyyy")
+        Range("a13").Value = "TOTAL : " & numOfItem & "CARTONS ON 1 再生木托"
+        
+        
+        Rows(11 & ":" & 8 + numOfItem).Insert
+        
+        For i = 10 To 9 + numOfItem
+        
+            Range("a" & i).Value = i - 9
+            Range("b" & i).Value = sku(i - 10)
+            Range("d" & i).Value = ref(i - 10)
+            Range("e" & i).Value = num(i - 10)
+            Range("j" & i).Value = "BIP" & bip(i - 10)
+        
+        Next i
+        
+        Range("e" & 10 + numOfItem).Value = "=sum(e10:e" & 10 + numOfItem & ")"
+        
+        
+        
+        '============================================================================
+        
+        ActiveWorkbook.Worksheets(2).Activate
+            
+        
+        Rows(11 & ":" & 8 + numOfItem).Insert
+        
+        For i = 10 To 9 + numOfItem
+        
+            Range("a" & i).Value = i - 9
+            Range("b" & i).Value = sku(i - 10)
+            Range("d" & i).Value = ref(i - 10)
+            Range("e" & i).Value = num(i - 10)
+            Range("f" & i).Value = price(i - 10)
+            Range("g" & i).Value = "=e" & i & "*f" & i
+            Range("i" & i).Value = "BIP" & bip(i - 10)
+        
+        Next i
+        
+        Range("e" & 10 + numOfItem).Value = "=sum(e10:e" & 10 + numOfItem & ")"
+        Range("g" & 10 + numOfItem).Value = "=sum(g10:g" & 10 + numOfItem & ")"
+        
+        
+         '============================================================================
+        
+        ActiveWorkbook.Worksheets(1).Activate
+        
+        Range("i3").Value = "Contract No.:" & invoiceNo
+        Range("i4").Value = "Date: " & Format(Date, "yyyy.mm.dd")
+        Range("i2:j3").Merge
+        Range("i4:j4").Merge
+            
+        
+        Rows(10 & ":" & 7 + numOfItem).Insert
+        
+        For i = 9 To 8 + numOfItem
+        
+            Range("a" & i).Value = i - 8
+            Range("b" & i).Value = sku(i - 9)
+            Range("d" & i).Value = ref(i - 9)
+            Range("g" & i).Value = num(i - 9)
+            Range("h" & i).Value = "只"
+            Range("i" & i).Value = price(i - 9)
+            Range("j" & i).Value = "=g" & i & "*i" & i
+            Range("l" & i).Value = "BIP" & bip(i - 9)
+        
+        Next i
+        
+        Range("j" & 9 + numOfItem).Value = "=sum(j9:j" & 9 + numOfItem & ")"
+        Range("g" & 9 + numOfItem).Value = "=sum(g9:g" & 9 + numOfItem & ")"
+            
+        
+'**********************************************************
+        
+    
+    ElseIf chose = 2 Then
+        
+        Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\黃埔sample.xlsx"
+        
+        
+        Windows("報關資料處理檔.xlsm").Activate
+        
+    
+        numOfItem = checkRow() - 1
+        
+        ReDim sku(numOfItem)
+        ReDim num(numOfItem)
+        ReDim ref(numOfItem)
+        ReDim bip(numOfItem)
+        ReDim price(numOfItem)
+        ReDim upc(numOfItem)
+        
+        
+        
+        currentRATE = InputBox("請輸入現時usd to rmb 匯率")
+        
+        'Save data into arrays
+        For i = 2 To numOfItem + 1
+        
+            sku(i - 2) = Range("a" & i).Value
+            num(i - 2) = Range("d" & i).Value
+            ref(i - 2) = Range("b" & i).Value
+            bip(i - 2) = Range("g" & i).Value
+            upc(i - 2) = Range("h" & i).Value
+            price(i - 2) = WorksheetFunction.Round(Range("k" & i).Value, 2)
+            
+            'Debug.Print sku(i - 2), num(i - 2), ref(i - 2), bip(i - 2), price(i - 2)
+        
+        Next i
+        
+        uniqueBIP = ArrayRemoveDups(bip)
+        reFileName = "黃埔單据" & uniqueBIP(0)
+        invoiceNo = uniqueBIP(0)
+        contractNo = "BIP" & uniqueBIP(0)
+        
+        For i = 1 To UBound(uniqueBIP) - 1
+        
+            reFileName = reFileName & "-" & uniqueBIP(i)
+            invoiceNo = invoiceNo & "/" & uniqueBIP(i)
+            contractNo = contractNo & "-BIP" & uniqueBIP(i)
+        
+        Next i
+        
+        Windows("黃埔sample.xlsx").Activate
+        
+        
+        ActiveWorkbook.SaveAs Filename:="C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\報關做單\" & reFileName & ".xlsx"
+        
+        ActiveWorkbook.Worksheets(3).Activate
+        
+        Range("g4").Value = reFileName
+        Range("g5").Value = contractNo
+        Range("g3").Value = Format(Date, "mm/dd/yyyy")
+        Range("h11").Value = numOfItem & "Container"
+        
+        
+        Rows(11 & ":" & 9 + numOfItem).Insert
+        
+        For i = 10 To 9 + numOfItem
+        
+            Range("a" & i).Value = 1
+            Range("b" & i).Value = ref(i - 10)
+            Range("d" & i).Value = num(i - 10)
+            Range("h" & i).Value = i - 9
+        
+        Next i
+        
+        Range("d" & 10 + numOfItem).Value = "=sum(d10:d" & 9 + numOfItem & ")"
+        
+        
+        
+        '============================================================================
+        
+        ActiveWorkbook.Worksheets(2).Activate
+            
+        
+        Rows(15 & ":" & 13 + numOfItem).Insert
+        
+        For i = 14 To 13 + numOfItem
+        
+            Range("a" & i).Value = i - 13
+            Range("b" & i).Value = sku(i - 14)
+            Range("c" & i).Value = ref(i - 14)
+            Range("g" & i).Value = num(i - 14)
+            Range("h" & i).Value = price(i - 14) * currentRATE
+            Range("f" & i).Value = "只"
+            Range("i" & i).Value = "=g" & i & "*h" & i
+            Range("m" & i).Value = upc(i - 14)
+            Range("n" & i).Value = "瑞士"
+            
+        
+        Next i
+        
+        Range("i" & 14 + numOfItem).Value = "=sum(i14:i" & 13 + numOfItem & ")"
+        Range("j" & 14 + numOfItem).Value = "=sum(j14:j" & 13 + numOfItem & ")"
+        Range("g" & 14 + numOfItem).Value = "=sum(g14:g" & 13 + numOfItem & ")"
+        
+        
+         '============================================================================
+        
+        ActiveWorkbook.Worksheets(1).Activate
+        
+        'Range("i3").Value = "Contract No.:" & invoiceNo
+        'Range("i4").Value = "Date: " & Format(Date, "yyyy.mm.dd")
+        'Range("i2:j3").Merge
+        'Range("i4:j4").Merge
+            
+        
+        Rows(19 & ":" & 17 + numOfItem).Insert
+        
+        For i = 18 To 17 + numOfItem
+        
+            Range("a" & i).Value = i - 17
+            Range("b" & i).Value = sku(i - 18)
+            Range("c" & i).Value = ref(i - 18)
+            Range("e" & i).Value = num(i - 18)
+            Range("f" & i).Value = price(i - 18) * currentRATE
+            Range("g" & i).Value = "=e" & i & "*f" & i
+            
+            Range("h" & i).Value = "RMB"
+            Range("i" & i).Value = "瑞士"
+        
+        Next i
+        
+        Range("e" & 18 + numOfItem).Value = "=sum(e18:e" & 17 + numOfItem & ")"
+        Range("g" & 18 + numOfItem).Value = "=sum(g18:g" & 17 + numOfItem & ")"
+        
+        
+        
+        '============================================================================
+        
+        ActiveWorkbook.Worksheets(6).Activate
+        
+        'Range("i3").Value = "Contract No.:" & invoiceNo
+        'Range("i4").Value = "Date: " & Format(Date, "yyyy.mm.dd")
+        'Range("i2:j3").Merge
+        'Range("i4:j4").Merge
+            
+        
+        Rows(5 & ":" & 3 + numOfItem).Insert
+        
+        For i = 5 To 4 + numOfItem
+        
+            Range("a" & i).Value = bip(i - 5)
+            Range("b" & i).Value = ref(i - 5)
+            Range("c" & i).Value = sku(i - 5)
+            Range("e" & i).Value = num(i - 5)
+            Range("f" & i).Value = price(i - 5) * currentRATE
+            Range("g" & i).Value = "=e" & i & "*f" & i
+            
+            'Range("h" & i).Value = "RMB"
+            'Range("i" & i).Value = "瑞士"
+        
+        Next i
+        
+        Range("e" & 5 + numOfItem).Value = "=sum(e5:e" & 5 + numOfItem & ")"
+        Range("g" & 5 + numOfItem).Value = "=sum(g5:g" & 5 + numOfItem & ")"
+
+
+'**********************************************************
+
+
+
+    ElseIf chose = 3 Then
+        
+               
+        
+        Windows("報關資料處理檔.xlsm").Activate
+        
+    
+        numOfItem = checkRow() - 1
+        
+        ReDim sku(numOfItem)
+        ReDim num(numOfItem)
+        ReDim ref(numOfItem)
+        ReDim bip(numOfItem)
+        ReDim price(numOfItem)
+
+        ReDim upc(numOfItem)
+        
+        
+        
+        currentRATE = InputBox("請輸入現時usd to rmb 匯率")
+        
+        'Save data into arrays
+        For i = 2 To numOfItem + 1
+        
+            sku(i - 2) = Range("a" & i).Value
+            num(i - 2) = Range("d" & i).Value
+            ref(i - 2) = Range("b" & i).Value
+            bip(i - 2) = Range("g" & i).Value
+            upc(i - 2) = Range("h" & i).Value
+            price(i - 2) = WorksheetFunction.Round(Range("k" & i).Value, 2)
+            
+            'Debug.Print sku(i - 2), num(i - 2), ref(i - 2), bip(i - 2), price(i - 2)
+        
+        Next i
+        
+        uniqueBIP = ArrayRemoveDups(bip)
+        reFileName = "天津單据" & uniqueBIP(0)
+        invoiceNo = uniqueBIP(0)
+        contractNo = "BIP" & uniqueBIP(0)
+        
+        For i = 1 To UBound(uniqueBIP) - 1
+        
+            reFileName = reFileName & "-" & uniqueBIP(i)
+            invoiceNo = invoiceNo & "/" & uniqueBIP(i)
+            contractNo = contractNo & "-BIP" & uniqueBIP(i)
+        
+        Next i
+        
+        Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\天律sample.xlsx"
+        
+        Windows("天律sample.xlsx").Activate
+        
+        
+        ActiveWorkbook.SaveAs Filename:="C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\報關做單\" & reFileName & ".xlsx"
+        
+        ActiveWorkbook.Worksheets(1).Activate
+        
+
+        Range("C3").Value = Range("C3").Value & contractNo
+        'Range("g3").Value = Format(Date, "mm/dd/yyyy")
+        'Range("h11").Value = numOfItem & "Container"
+        
+        
+        Rows(6 & ":" & 4 + numOfItem).Insert
+        
+        For i = 5 To 4 + numOfItem
+        
+            Range("c" & i).Value = bip(i - 5)
+            Range("h" & i).Value = ref(i - 5)
+            Range("f" & i).Value = sku(i - 5)
+            Range("g" & i).Value = upc(i - 5)
+            Range("k" & i).Value = num(i - 5)
+            Range("o" & i).Value = price(i - 5) * currentRATE
+            Range("p" & i).Value = "=o" & i & "*k" & i
+            Range("l" & i).Value = "只"
+            Range("q" & i).Value = "RMB"
+            Range("r" & i).Value = "瑞士"
+        
+        Next i
+        
+        Range("k" & 5 + numOfItem).Value = "=sum(k5:k" & 4 + numOfItem & ")"
+        
+        
+        
+        '============================================================================
+        
+        Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\天律 箱單發票 sample.xlsx"
+        
+        Windows("天律 箱單發票 sample.xlsx").Activate
+        
+        reFileName = "箱單發票" & reFileName
+        
+        ActiveWorkbook.SaveAs Filename:="C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\報關單 samuel\報關做單\" & reFileName & ".xlsx"
+        
+        ActiveWorkbook.Worksheets(1).Activate
+        
+        
+        Range("I4").Value = contractNo
+        Range("B4").Value = Format(Date, "dd/mm/yyyy")
+        'Range("h11").Value = numOfItem & "Container"
+        
+        
+        Rows(26 & ":" & 24 + numOfItem).Insert
+        
+        For i = 25 To 24 + numOfItem
+        
+            Range("a" & i).Value = sku(i - 25)
+            Range("b" & i).Value = 1
+            Range("d" & i).Value = ref(i - 25)
+            Range("g" & i).Value = num(i - 25)
+            
+        
+        Next i
+        
+        '==============================================================
+        
+        ActiveWorkbook.Worksheets(2).Activate
+        
+        
+        Range("d11").Value = Range("d11").Value & contractNo
+        Range("a11").Value = Format(Date, "dd/mm/yyyy")
+        'Range("h11").Value = numOfItem & "Container"
+        
+        
+        Rows(22 & ":" & 20 + numOfItem).Insert
+        
+        For i = 21 To 20 + numOfItem
+        
+            Range("a" & i).Value = ref(i - 21)
+            Range("c" & i).Value = num(i - 21)
+            Range("d" & i).Value = price(i - 21) * currentRATE
+            Range("e" & i).Value = "=c" & i & "*d" & i
+            Range("f" & i).Value = "=e" & i
+        
+        
+        Next i
+        
+        
+        
+        '============================================================================
+
+
+
+    Else
+    
+        MsgBox "please type 1, 2 or 3"
+    
+    End If
+    
+    
+    
+    
+
+End Sub
+
+Function ArrayRemoveDups(MyArray As Variant) As Variant
+    Dim nFirst As Long, nLast As Long, i As Long
+    Dim item As String
+    
+    Dim arrTemp() As String
+    Dim Coll As New Collection
+
+    'Get First and Last Array Positions
+    nFirst = LBound(MyArray)
+    nLast = UBound(MyArray)
+    ReDim arrTemp(nFirst To nLast)
+
+    'Convert Array to String
+    For i = nFirst To nLast
+        arrTemp(i) = CStr(MyArray(i))
+    Next i
+    
+    'Populate Temporary Collection
+    On Error Resume Next
+    For i = nFirst To nLast
+        Coll.Add arrTemp(i), arrTemp(i)
+    Next i
+    Err.Clear
+    On Error GoTo 0
+
+    'Resize Array
+    nLast = Coll.Count + nFirst - 1
+    ReDim arrTemp(nFirst To nLast)
+    
+    'Populate Array
+    For i = nFirst To nLast
+        arrTemp(i) = Coll(i - nFirst + 1)
+    Next i
+    
+    'Output Array
+    ArrayRemoveDups = arrTemp
+
+End Function
+
+Function checkRow() As Integer
+
+    Count = 0
+    
+    For i = 1 To ActiveSheet.UsedRange.Rows.Count + 1
+    
+        If Range("a" & i).Value <> "" Then
+        
+            Count = Count + 1
+        
+        End If
+    
+    Next i
+    
+    'Debug.Print Count
+    
+    checkRow = Count
+
+End Function
