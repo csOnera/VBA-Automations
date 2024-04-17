@@ -1,0 +1,150 @@
+
+Private Declare PtrSafe Function AccessibleObjectFromWindow Lib "oleacc" ( _
+    ByVal hwnd As LongPtr, ByVal dwId As Long, riid As Guid, ppvObject As Object) As Long
+
+Private Declare PtrSafe Function FindWindowExA Lib "user32" ( _
+    ByVal hwndParent As LongPtr, ByVal hwndChildAfter As LongPtr, _
+    ByVal lpszClass As String, ByVal lpszWindow As String) As LongPtr
+    
+Private Declare PtrSafe Function IIDFromString Lib "ole32" ( _
+    ByVal lpsz As LongPtr, lpiid As Guid) As Long
+    
+Private Type Guid
+    Data1 As Long
+    Data2 As Integer
+    Data3 As Integer
+    Data4(1 To 8) As Byte
+End Type
+
+Private Const IID_IDispatch As String = "{00020400-0000-0000-C000-000000000046}"
+Private Const OBJID_NATIVEOM As Long = &HFFFFFFF0
+
+Sub autoAddCostNOriginToPOP()
+
+    Dim i As Integer, j As Integer, maxRow As Integer, k As Integer, determineNum As Integer
+    
+    
+    Windows("exportExportRecords.xlsm").Activate
+    
+    maxRow = ActiveSheet.UsedRange.Rows.Count
+    
+    Dim invoiceArr() As String, costArr() As Single
+    
+    ReDim invoiceArr(maxRow - 1), costArr(maxRow - 1)
+    
+    determineNum = 0
+    
+    For i = 2 To maxRow
+    
+        If InStr(1, Range("f" & i).Value, "POP") <> 0 Then
+        
+            invoiceArr(i - 2) = Range("D" & i)
+            
+            costArr(i - 2) = Range("I" & i)
+            
+            determineNum = determineNum + 1
+            
+        End If
+        
+    Next i
+    
+    If determineNum > 0 Then
+    
+        On Error GoTo Opened
+            Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\出貨OR退貨紀錄\POP出貨記錄LATEST VERSION-DESKTOP-833R29B.xlsx"
+            
+        GoTo noError
+
+Opened:
+    'Workbooks ("POP出貨記錄LATEST VERSION-DESKTOP-833R29B.xlsx")
+    CloseOtherExcelInstances
+    
+    Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\出貨OR退貨紀錄\POP出貨記錄LATEST VERSION-DESKTOP-833R29B.xlsx"
+    
+    MsgBox "ENTER TO PROCESS"
+        
+        
+noError:
+        Windows("POP出貨記錄LATEST VERSION-DESKTOP-833R29B.xlsx").Activate
+        Worksheets("銷售清單").Activate
+        
+        For i = 1000 To ActiveSheet.UsedRange.Rows.Count
+            
+            If Range("q" & i).Value <> "" Then
+            
+                Exit For
+                
+            End If
+            
+        
+        Next i
+        
+        j = 1
+        
+        'find the first item
+        Do While True
+        
+            If Range("d" & i - j) = "" And Range("e" & i - j - 1) = "" And Range("e" & i - j) <> "" Then
+            
+                
+                
+                Exit Do
+            
+            End If
+            
+            j = j + 1
+        
+        Loop
+        
+        'Debug.Print i - j, UBound(costArr)
+        
+        For k = i - j To i - j + UBound(costArr) - 1
+            
+            If Range("d" & k) = "" And Range("m" & k) = "" Then
+                Range("d" & k).Value = invoiceArr(k - i + j)
+                Range("m" & k).Value = costArr(k - i + j)
+            End If
+        
+        Next k
+        
+    End If
+    
+    
+    
+
+End Sub
+
+
+Public Function CloseOtherExcelInstances()
+    Dim xlApp As Application
+    Dim wb As Workbook
+    For Each xlApp In GetExcelInstances()
+        If Not ThisWorkbook.Application Is xlApp Then
+            For Each wb In xlApp.Workbooks
+                wb.Close False
+            Next
+            xlApp.Quit
+        End If
+    Next
+End Function
+
+Private Function GetExcelInstances() As Collection
+    Dim oIDispatch As Guid
+    Dim acc As Object
+    Dim hwnd As LongPtr, hwnd2 As LongPtr, hwnd3 As LongPtr
+    Dim coll As Collection
+    
+    IIDFromString StrPtr(IID_IDispatch), oIDispatch
+    
+    Set coll = New Collection
+    Do
+        hwnd = FindWindowExA(0, hwnd, "XLMAIN", vbNullString)
+        If hwnd = 0 Then Exit Do
+        hwnd2 = FindWindowExA(hwnd, 0, "XLDESK", vbNullString)
+        hwnd3 = FindWindowExA(hwnd2, 0, "EXCEL7", vbNullString)
+        If AccessibleObjectFromWindow(hwnd3, OBJID_NATIVEOM, oIDispatch, acc) = 0 Then
+            coll.Add acc.Application
+        End If
+    Loop
+    Set GetExcelInstances = coll
+End Function
