@@ -1,0 +1,55 @@
+Sub addSpacing()
+
+    Windows("購貨.xlsx").Activate
+    Worksheets("貨品流動表").Activate
+    
+    startingNum = 4
+    
+    For i = startingNum To ActiveSheet.UsedRange.Rows.Count
+    
+        Rows("" & startingNum + (i - startingNum) * 4 & ":" & startingNum + (i - startingNum) * 4 + 2).Insert
+    
+    Next i
+    
+
+End Sub
+
+Sub addNum()
+
+    Windows("應收帳款.xlsx").Activate
+    Worksheets("POP銷貨分類帳").Activate
+    
+    For Each cell In Range("g:g")
+    
+        If cell.Value <> "" Or cell.Value = "Ref" Then
+        
+            Range("" & cell.Row & ":" & cell.Row).Copy Range("" & cell.Row + 1 & ":" & cell.Row + 1)
+            cell.Offset(1, 0).Cut cell.Offset(1, 1)
+            
+        End If
+    
+    Next cell
+    
+
+
+End Sub
+
+
+Sub deleteEmpty()
+
+    Windows("應收帳款.xlsx").Activate
+    Worksheets("PDD應收帳款").Activate
+    
+    For Each cell In Range("a5:a970")
+    
+        If cell.Value = "" Then
+        
+            Range("" & cell.Row & ":" & cell.Row).Delete
+            'Debug.Print cell.Row
+        
+        End If
+        
+    
+    Next cell
+
+End Sub
