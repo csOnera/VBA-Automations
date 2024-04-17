@@ -1,0 +1,109 @@
+Sub copy()
+
+    Dim invoice As String, startingNumber As Integer
+    Dim i As Integer, pasteStartingRow As Integer
+    Dim sku() As String, upc() As String, numberA() As Integer, brand() As String
+        
+    
+    'input 訂單號 and brand
+    invoice = InputBox("訂單號: ")
+    'brand = UCase(InputBox("品牌"))
+    startingNumber = InputBox("開始箱號: ")
+
+    'copy data into arrays
+    Worksheets(1).Activate
+        
+    Count = ActiveSheet.UsedRange.Rows.Count
+    Debug.Print Count
+    
+    ReDim sku(1 To Count - 1)
+    ReDim upc(1 To Count - 1)
+    ReDim numberA(1 To Count - 1)
+    ReDim brand(1 To Count - 1)
+    
+    
+    For i = 1 To Count - 1
+    
+        sku(i) = Cells(i + 1, 1)
+        upc(i) = Cells(i + 1, 8)
+        'number changed to d column
+        numberA(i) = Cells(i + 1, 4)
+        
+        'brand
+        If InStr(UCase(Cells(i + 1, 2).Value), "TISSOT") Or InStr(Cells(i + 1, 2).Value, "天梭") Then
+            brand(i) = "TISSOT"
+        ElseIf InStr(UCase(Cells(i + 1, 2).Value), "MIDO") Or InStr(Cells(i + 1, 2).Value, "美度") Then
+            brand(i) = "MIDO"
+        ElseIf InStr(UCase(Cells(i + 1, 2).Value), "CERTINA") Or InStr(Cells(i + 1, 2).Value, "雪??") Then
+            brand(i) = "CERTINA"
+        ElseIf InStr(UCase(Cells(i + 1, 2).Value), "LONGINES") Or InStr(Cells(i + 1, 2).Value, "浪琴") Then
+            brand(i) = "LONGINES"
+        ElseIf InStr(UCase(Cells(i + 1, 2).Value), "HAMILTON") Or InStr(Cells(i + 1, 2).Value, "?米??") Then
+            brand(i) = "HAMILTON"
+        Else
+            brand(i) = "unknown"
+        
+        End If
+        'Debug.Print sku(i), upc(i), numberA(i)
+        
+    Next i
+
+    'delete all in printingPage first
+    Worksheets(2).Activate
+    Cells.Delete Shift:=xlUp
+    
+    'copy and paste the table from template worksheet
+    'also change the brand and 訂單號 first
+    Worksheets(3).Activate
+    
+    Range("c5").Value = brand(1)
+    Range("c7").Value = invoice
+
+    Range("b3:c11").copy
+    
+    Worksheets(2).Activate
+    
+    Range("a3").Select
+    ActiveSheet.Paste
+    
+    'adjust the columns width
+    Columns("a").ColumnWidth = 35
+    Columns("b").ColumnWidth = 51
+    
+    For i = 1 To Count - 1
+    
+        'when it is even
+        If i Mod 2 = 0 Then
+            
+            pasteStartingRow = 17 + 30 * (i / 2 - 1)
+            
+        Else
+            
+            pasteStartingRow = 3 + 30 * (Application.WorksheetFunction.RoundUp(i / 2, 0) - 1)
+        
+        End If
+        
+        'Debug.Print pasteStartingRow
+        
+        Range("a3:b11").copy
+        
+        Range("a" & pasteStartingRow).Select
+        ActiveSheet.Paste
+        
+        Range("a" & pasteStartingRow & ":b" & pasteStartingRow).Merge
+        
+        Rows(pasteStartingRow).RowHeight = 33.75
+        Rows(pasteStartingRow + 1 & ":" & pasteStartingRow + 8).RowHeight = 31.5
+        
+        'edit data here (can edit the starting box index here!!!!)
+        Range("b" & pasteStartingRow + 5).Value = i + startingNumber - 1
+        Range("b" & pasteStartingRow + 2).Value = brand(i)
+        Range("b" & pasteStartingRow + 6).Value = sku(i)
+        Range("b" & pasteStartingRow + 7).Value = upc(i)
+        Range("b" & pasteStartingRow + 8).Value = numberA(i)
+        
+        
+    
+    Next i
+
+End Sub
