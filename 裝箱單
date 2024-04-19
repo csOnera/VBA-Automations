@@ -9,6 +9,17 @@ Sub copy()
     invoice = InputBox("訂單號: ")
     'brand = UCase(InputBox("品牌"))
     startingNumber = InputBox("開始箱號: ")
+    去處 = InputBox("鄭州 (1) 黃埔 (2) 天津 (3)")
+    
+    If 去處 = "1" Or 去處 = "2" Or 去處 = "3" Then
+    
+        Debug.Print "reasonable answer"
+    
+    Else
+    
+        End
+        
+    End If
 
     'copy data into arrays
     Worksheets(1).Activate
@@ -56,6 +67,9 @@ Sub copy()
     'also change the brand and 訂單號 first
     Worksheets(3).Activate
     
+    
+    
+    
     Range("c5").Value = brand(1)
     Range("c7").Value = invoice
 
@@ -65,6 +79,20 @@ Sub copy()
     
     Range("a3").Select
     ActiveSheet.Paste
+    
+    If 去處 = "1" Then
+    
+        Range("a3").Value = Range("a3").Value + "鄭州"
+        
+    ElseIf 去處 = "2" Then
+    
+        Range("a3").Value = Range("a3").Value + "黃埔"
+        
+    ElseIf 去處 = "3" Then
+    
+        Range("a3").Value = Range("a3").Value + "天津"
+    
+    End If
     
     'adjust the columns width
     Columns("a").ColumnWidth = 35
