@@ -1,0 +1,211 @@
+Option Explicit
+
+Function BuildProcArgString(ByVal ProcName As String, ParamArray Args() As Variant)
+
+    Dim TempArg, Temp
+    
+    For Each TempArg In Args
+    Temp = Temp + Chr(34) + TempArg + Chr(34) + ","
+    Next
+    BuildProcArgString = ProcName + "(" + Left(Temp, Len(Temp) - 1) + ")"
+    
+End Function
+
+Sub searchNCreateBtn()
+
+Dim 號碼 As String, x As Integer, columnLength As Integer, found As Range, btn As Object
+Dim btn1 As Object, found1 As Range, found2 As Range, Response As String
+Dim loopFirstAddress As String, rngLast As Range, btn2 As Object
+Dim currentAddress As String, initialAddress As String
+
+
+
+Requestion:
+    If Not Range("f1") = "" Then
+        號碼 = Range("f1").Value
+    Else
+        號碼 = InputBox("請輸入要查找號碼")
+    End If
+    'Things to add:
+    'connect to previous V
+    'button for exchanging founds V
+    'fix bug of cancel and more than 2 V
+    'connect in and out to add in stock to auto correct
+    
+    columnLength = Range("A1").End(xlDown).Row
+    
+    Set found = Range("a:a").Find(號碼)
+    Set found1 = Range("a:a").Find(號碼, SearchDirection:=xlPrevious)
+    
+    
+    If found Is Nothing Then
+        MsgBox "item was not found."
+    Else
+    Set found2 = Range("a:a").Find(號碼, after:=Range(found.Address(False, False)))
+        If found.Address = found1.Address Then
+            
+            found.Select
+            
+            MsgBox ("found 1 item at: " & found.Address)
+        ElseIf found = "" Then
+            MsgBox "please input sth..."
+        ElseIf found2.Address <> found1.Address Then
+            MsgBox "ERROR: 2 or more items found, matched results are shown in debug"
+            
+            initialAddress = found.Address(False, False)
+            found.Select
+            Debug.Print initialAddress
+            
+            Do While initialAddress <> currentAddress
+                currentAddress = Range("a:a").Find(found, after:=Selection).Address(False, False)
+                Range(currentAddress).Select
+                Debug.Print currentAddress
+            Loop
+        Else
+            Response = MsgBox("found 2 results:" & found.Address(False, False) & "," & found1.Address(False, False), vbOKCancel)
+            
+            If Response = vbOK Then
+                found.Select
+                
+                createBtns
+    
+            Else
+                found1.Select
+                
+                createBtns
+        
+            End If
+        End If
+    End If
+
+
+End Sub
+
+Sub toTop()
+
+Range("f1") = ""
+
+Range("A1").Select
+
+deleteBtns
+
+End Sub
+
+Sub toFound1()
+
+
+Range("a:a").Find(Range("f1").Value, after:=Range("a" & Selection.Row)).Select
+
+deleteBtns
+
+createBtns
+
+End Sub
+
+Sub toPre()
+
+Dim searchValue As String
+
+searchValue = Selection.Value
+
+deleteBtns
+
+Range("f1") = ""
+
+Worksheets("PREVIOUS").Activate
+Range("f1") = searchValue
+
+Dim btn As Object
+Dim shape As shape, count As Integer
+
+count = 0
+
+For Each shape In ActiveSheet.Shapes
+    If shape.name = "search" Then
+        count = count + 1
+    End If
+Next
+
+If count = 0 Then
+
+    Set btn = ActiveSheet.Buttons.Add(189, 45, 131.25, 23.25)
+    With btn
+        .caption = "Search"
+        .name = "search"
+        .OnAction = "searchNCreateBtn"
+    End With
+End If
+
+Application.Run ActiveSheet.Shapes("search").OnAction
+
+
+End Sub
+Sub autoFillZero()
+
+Dim i As Integer, cell As Range
+
+For i = 8 To ActiveSheet.UsedRange.Rows.count
+    Set cell = Range("c" & i)
+    
+    If Len(Range("b" & i)) > 0 And Len(cell) = 0 Then
+        cell.Value = 0
+    End If
+Next i
+
+
+End Sub
+
+Sub testing()
+
+Dim shape As shape
+
+Debug.Print "t" & TextJoin("", True, IfError((Mid(Range("a2"), Row(indirect("1:" & Len(Range("a2")))), 1) * 1), ""))
+
+End Sub
+
+Function createBtns()
+
+Dim btn As Object, btn1 As Object, btn2 As Object, cell As Range
+
+
+Set cell = Selection
+Range("f1") = cell
+
+Set btn = ActiveSheet.Buttons.Add(cell.Offset(-1, 3).Left, cell.Offset(-1, 3).Top, cell.Offset(-1, 3).Width, cell.Height)
+Set btn1 = ActiveSheet.Buttons.Add(cell.Offset(-1, 2).Left, cell.Offset(-1, 2).Top, cell.Offset(-1, 2).Width, cell.Height)
+Set btn2 = ActiveSheet.Buttons.Add(cell.Offset(-1, 1).Left, cell.Offset(-1, 1).Top, cell.Offset(-1, 1).Width, cell.Height)
+
+    With btn
+        .caption = "TOP"
+        .name = "ToTop"
+        .OnAction = "toTop"
+    End With
+    
+    With btn1
+        .caption = "TURN"
+        .name = "ToFound1"
+        .OnAction = "toFound1"
+    End With
+    
+    With btn2
+        .caption = "FINDPRE"
+        .name = "FindPre"
+        .OnAction = "toPre"
+    End With
+If Not ActiveSheet.name = "PREVIOUS" Then
+    ActiveSheet.Shapes("FindPre").Delete
+End If
+
+End Function
+
+
+Function deleteBtns()
+
+    ActiveSheet.Shapes("ToTop").Delete
+    
+    ActiveSheet.Shapes("ToFound1").Delete
+    
+    'ActiveSheet.Shapes("FindPre").Delete
+
+
+End Function
