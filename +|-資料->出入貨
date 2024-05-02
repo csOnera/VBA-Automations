@@ -84,7 +84,7 @@ Sub autoExportRecord()
         Else
         
         'here is for active page
-            msgback = msgback + insertCases(invoice, too, ref, price)
+            msgback = msgback + newInsertCases(invoice, too, ref, price)
             
         End If
         
@@ -145,12 +145,12 @@ End Function
 
 Function newInsertCases(invoice As String, too As String, ref As String, price As Single) As String
 
-    loopNumber = ActiveSheet.UsedRange.Rows.Count
+    loopnumber = ActiveSheet.UsedRange.Rows.Count
     
     
-    For i = 2 To loopNumber
+    For i = 2 To loopnumber
     
-        If InStr(Range("b" & i).Value, invoice) And Range("d" & i).Value = ref Then
+        If Range("b" & i).Value = invoice And Range("d" & i).Value = ref Then
         
             Application.CutCopyMode = False
             
@@ -182,11 +182,14 @@ Function newInsertCases(invoice As String, too As String, ref As String, price A
             
             Application.CutCopyMode = True
             
-            newInsertCases = Selection.Address(False, False)
+            newInsertCases = Range("d" & i).Address(False, False)
+            
+            Exit For
         
-        ElseIf i = loopNumber Then
+        ElseIf i = loopnumber Or loopnumber > 10000 Then
         
-            MsgBox "沒有找到 " & invoice & " 的" & ref & ", 請手動輸入"
+            MsgBox "沒有找到 " & invoice & " 的" & ref & ", 請手動填入資料"
+            
         
         End If
     
