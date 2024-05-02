@@ -38,7 +38,7 @@ Sub autoExportRecord()
 
         
     
-    'first check active
+    'first check 2023
         
         Workbooks.Open "C:\Users\onera\OneDrive - ONE ERA (HK) LIMITED\oneraShare\CHARMSMART " & getYear() & " 出入貨紀錄.xlsx"
     
@@ -66,7 +66,7 @@ Sub autoExportRecord()
                 
             Else
         
-                msgback = msgback + insertCases(invoice, too, ref, price)
+                msgback = msgback + newInsertCases(invoice, too, ref, price)
                 
                 'edit the current number
                 If Selection.Column = 5 Then
@@ -83,6 +83,7 @@ Sub autoExportRecord()
             
         Else
         
+        'here is for active page
             msgback = msgback + insertCases(invoice, too, ref, price)
             
         End If
@@ -98,6 +99,10 @@ End Sub
 
 
 Function insertCases(invoice As String, too As String, ref As String, price As Single) As String
+
+    'modification
+    'fixing bug of inserting export by finding invoice then find ref
+    'by coincidence
 
     Set finding = Range("b:b").Find(invoice)
 
@@ -135,6 +140,57 @@ Function insertCases(invoice As String, too As String, ref As String, price As S
     Application.CutCopyMode = True
     
     insertCases = finding.Address(False, False)
+
+End Function
+
+Function newInsertCases(invoice As String, too As String, ref As String, price As Single) As String
+
+    loopNumber = ActiveSheet.UsedRange.Rows.Count
+    
+    
+    For i = 2 To loopNumber
+    
+        If InStr(Range("b" & i).Value, invoice) And Range("d" & i).Value = ref Then
+        
+            Application.CutCopyMode = False
+            
+            Range("d" & i).Select
+            
+    
+            If Range("j" & Selection.Row).Value = "" Then
+                
+                Range("j" & Selection.Row).Value = too
+                Range("m" & Selection.Row).Value = price
+                
+            'changed from h, i, i to d, e, e################################
+            ElseIf Range("d" & Selection.Row + 1).Value = "" And Range("e" & Selection.Row + 1).Value = "" Then
+            
+                Range("e" & Selection.Row).End(xlDown).Select
+                
+                Rows(Selection.Row).Insert
+                
+                Range("j" & Selection.Row).Value = too
+                Range("m" & Selection.Row).Value = price
+            
+            Else
+            
+                Rows(Selection.Row + 1).Insert
+                Range("j" & Selection.Row + 1).Value = too
+                Range("m" & Selection.Row + 1).Value = price
+                            
+            End If
+            
+            Application.CutCopyMode = True
+            
+            newInsertCases = Selection.Address(False, False)
+        
+        ElseIf i = loopNumber Then
+        
+            MsgBox "沒有找到 " & invoice & " 的" & ref & ", 請手動輸入"
+        
+        End If
+    
+    Next i
 
 End Function
 
